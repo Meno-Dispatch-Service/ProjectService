@@ -1,0 +1,48 @@
+networks:
+  dev:
+    driver: bridge
+
+
+services:
+  project_service:
+    ports:
+      - "8082:8082"
+    enviorement:
+      PG_URL: "postgresql+asyncpg://ibragim:admin123@pg:5432/ProjectDB"
+      REDIS_HOST: redis
+      REDIS_POTR: 6379
+    depends_on:
+      pg:
+        condition: service_healthy
+    networks:
+     - dev
+
+  pg:
+    image: postgres:16.4
+    environment:
+      POSTGRES_DB: ProjectDB
+      POSTGRES_USER: ibragim
+      POSTGRES_PASSWORD: admin123
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ibragim  -d ProjectDB"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - dev
+  
+
+volumes:
+  pgdata:
